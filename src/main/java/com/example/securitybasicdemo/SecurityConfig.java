@@ -10,7 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
@@ -59,7 +59,7 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         // For demo purposes only - use proper password encoding in production
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     private void initializeDatabase(JdbcUserDetailsManager userDetailsManager) {
@@ -67,7 +67,7 @@ public class SecurityConfig {
         if (!userDetailsManager.userExists("user")) {
             UserDetails user1 = User.builder()
                     .username("user")
-                    .password("password") // No {noop} prefix needed with NoOpPasswordEncoder
+                    .password(passwordEncoder().encode("password")) // No {noop} prefix needed with NoOpPasswordEncoder
                     .roles("USER")
                     .build();
             userDetailsManager.createUser(user1);
@@ -76,7 +76,7 @@ public class SecurityConfig {
         if (!userDetailsManager.userExists("admin")) {
             UserDetails admin = User.builder()
                     .username("admin")
-                    .password("admin")
+                    .password(passwordEncoder().encode("admin"))
                     .roles("ADMIN")
                     .build();
             userDetailsManager.createUser(admin);
