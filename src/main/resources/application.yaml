@@ -2,6 +2,10 @@ spring:
   application:
     name: spring-security
 
+  app:
+    jwtSecret: mySecretKey123912738aopsgjnspkmndfsopkvajoirjg94gf2opfng2moknm  # any key
+    jwtExpirationMs: 3000000
+
 # ===============================
 # H2 Database Configuration
 # ===============================
@@ -19,3 +23,15 @@ spring:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+
+
+logging:
+  level:
+    org:
+      springframework: DEBUG
+      security: DEBUG
+      hibernate:
+        SQL: DEBUG
+    com:
+      example:
+        securitybasicdemo: DEBUG

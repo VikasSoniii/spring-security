@@ -1,12 +1,17 @@
 package com.example.securitybasicdemo;
 
+import com.example.securitybasicdemo.jwt.AuthEntryPointJwt;
+import com.example.securitybasicdemo.jwt.AuthTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.sql.DataSource;
 
@@ -21,19 +27,30 @@ import javax.sql.DataSource;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
     @Autowired
     DataSource dataSource;
+    @Autowired
+    private AuthEntryPointJwt unauthorizedHandler;
+
+    @Bean
+    public AuthTokenFilter authenticationJwtTokenFilter() {
+        return new AuthTokenFilter();
+    }
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll() // allow H2 console
+                        .requestMatchers("/signin").permitAll()
                         .anyRequest().authenticated()                 // secure all other endpoints
-                )
-                .formLogin(Customizer.withDefaults())
-                .httpBasic(Customizer.withDefaults());
+                );
+        http.sessionManagement(
+                session-> session.sessionCreationPolicy(
+                        SessionCreationPolicy.STATELESS)
+        );
+        http.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler));
+        //http.httpBasic(withDefaults());
 
         // Allow frames for H2 console
         http.headers(headers -> headers
@@ -42,44 +59,45 @@ public class SecurityConfig {
 
         // Disable CSRF for H2 console
         http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"));
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/signin"));
+
+        http.addFilterBefore(authenticationJwtTokenFilter(),UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
-
-        // Initialize database schema (optional - better to use schema.sql)
-        initializeDatabase(jdbcUserDetailsManager);
-
-        return jdbcUserDetailsManager;
+    public UserDetailsService userDetailsService(DataSource dataSource) {
+        return new JdbcUserDetailsManager(dataSource);
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        // For demo purposes only - use proper password encoding in production
-        return new BCryptPasswordEncoder();
-    }
-
-    private void initializeDatabase(JdbcUserDetailsManager userDetailsManager) {
-        // Only create users if they don't exist
-        if (!userDetailsManager.userExists("user")) {
-            UserDetails user1 = User.builder()
-                    .username("user")
-                    .password(passwordEncoder().encode("password")) // No {noop} prefix needed with NoOpPasswordEncoder
+    public CommandLineRunner initData(UserDetailsService userDetailsService) {
+        return args -> {
+            JdbcUserDetailsManager manager = (JdbcUserDetailsManager) userDetailsService;
+            UserDetails user1 = User.withUsername("user")
+                    .password(passwordEncoder().encode("password"))
                     .roles("USER")
                     .build();
-            userDetailsManager.createUser(user1);
-        }
-
-        if (!userDetailsManager.userExists("admin")) {
-            UserDetails admin = User.builder()
-                    .username("admin")
+            UserDetails admin = User.withUsername("admin")
+                    //.password(passwordEncoder().encode("adminPass"))
                     .password(passwordEncoder().encode("admin"))
                     .roles("ADMIN")
                     .build();
+
+            JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
+            userDetailsManager.createUser(user1);
             userDetailsManager.createUser(admin);
-        }
+        };
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration builder) throws Exception {
+        return builder.getAuthenticationManager();
     }
 }
