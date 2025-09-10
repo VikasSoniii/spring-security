@@ -30,7 +30,12 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	runtimeOnly("com.h2database:h2")
+
+	//Added PostgreSql Dependency
+	runtimeOnly("org.postgresql:postgresql")
+
+	//H2 DB Dependency
+	//runtimeOnly("com.h2database:h2")
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

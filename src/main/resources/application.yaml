@@ -9,21 +9,32 @@ spring:
 # ===============================
 # H2 Database Configuration
 # ===============================
+#  datasource:
+#    url: jdbc:h2:mem:paymentdb
+#    driverClassName: org.h2.Driver
+#    username: sa
+#    password:
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-console
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#    database-platform: org.hibernate.dialect.H2Dialect
+
+  #PostgreSQL Configuration
   datasource:
-    url: jdbc:h2:mem:paymentdb
-    driverClassName: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:postgresql://localhost:5432/securityapp
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: admin
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-    database-platform: org.hibernate.dialect.H2Dialect
-
+    database-platform: org.hibernate.dialect.PostgreSQLDialect       #org.hibernate.dialect.H2Dialect <-H2 Dialect
 
 logging:
   level:
