@@ -10,7 +10,8 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import javax.sql.DataSource;
 
 /**
- * Class is used for create and populate database schehma
+ * Class is used for create and populate database schehma.
+ * This class is optional, you can remove this and data.sql and directly create tables in database.
  */
 @Configuration
 public class DataSourceConfig {
