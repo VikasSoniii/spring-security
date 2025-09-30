@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,9 +41,11 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(Customizer.withDefaults())  // allow Security to use your WebMvcConfigurer CORS config
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**").permitAll() // allow H2 console
+                        //.requestMatchers("/h2-console/**").permitAll() // allow H2 console
                         .requestMatchers("/signin").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()    //publically accessible API's
                         .anyRequest().authenticated()                 // secure all other endpoints
                 );
         http.sessionManagement(
@@ -58,11 +61,11 @@ public class SecurityConfig {
         );
 
         // Disable CSRF for H2 console
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"));
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/signin"));
+        //http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"));
+        //http.csrf(csrf -> csrf.ignoringRequestMatchers("/signin"));
+        http.csrf(csrf -> csrf.disable());
 
         http.addFilterBefore(authenticationJwtTokenFilter(),UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
@@ -71,23 +74,30 @@ public class SecurityConfig {
         return new JdbcUserDetailsManager(dataSource);
     }
 
+    /* Good for learning project, not good for production grade application, we might need to create endpoint and register user
+    with database.*/
+
     @Bean
     public CommandLineRunner initData(UserDetailsService userDetailsService) {
         return args -> {
             JdbcUserDetailsManager manager = (JdbcUserDetailsManager) userDetailsService;
-            UserDetails user1 = User.withUsername("user")
-                    .password(passwordEncoder().encode("password"))
-                    .roles("USER")
-                    .build();
-            UserDetails admin = User.withUsername("admin")
-                    //.password(passwordEncoder().encode("adminPass"))
-                    .password(passwordEncoder().encode("admin"))
-                    .roles("ADMIN")
-                    .build();
-
             JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
-            userDetailsManager.createUser(user1);
-            userDetailsManager.createUser(admin);
+
+            if(!manager.userExists("user")){
+                UserDetails user = User.withUsername("user")
+                        .password(passwordEncoder().encode("password"))
+                        .roles("USER")
+                        .build();
+                userDetailsManager.createUser(user);
+            }
+            if(!manager.userExists("admin")){
+                UserDetails admin = User.withUsername("admin")
+                        //.password(passwordEncoder().encode("adminPass"))
+                        .password(passwordEncoder().encode("admin"))
+                        .roles("ADMIN")
+                        .build();
+                userDetailsManager.createUser(admin);
+            }
         };
     }
 

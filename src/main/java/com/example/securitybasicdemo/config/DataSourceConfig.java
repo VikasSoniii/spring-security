@@ -13,7 +13,7 @@ import javax.sql.DataSource;
  * Class is used for create and populate database schehma.
  * This class is optional, you can remove this and data.sql and directly create tables in database.
  */
-@Configuration
+//@Configuration
 public class DataSourceConfig {
     @Autowired
     private DataSource dataSource;
@@ -21,11 +21,11 @@ public class DataSourceConfig {
     @Bean
     public DataSourceInitializer dataSourceInitializer(){
         DataSourceInitializer dataSourceInitializer = new DataSourceInitializer();
-        dataSourceInitializer.setDataSource(dataSource);
+        /*dataSourceInitializer.setDataSource(dataSource);
 
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         populator.addScript(new ClassPathResource("data.sql"));
-        dataSourceInitializer.setDatabasePopulator(populator);
+        dataSourceInitializer.setDatabasePopulator(populator);*/
 
         return dataSourceInitializer;
     }
