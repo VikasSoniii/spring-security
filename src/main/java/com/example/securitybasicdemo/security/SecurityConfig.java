@@ -1,4 +1,4 @@
-package com.example.securitybasicdemo;
+package com.example.securitybasicdemo.security;
 
 import com.example.securitybasicdemo.jwt.AuthEntryPointJwt;
 import com.example.securitybasicdemo.jwt.AuthTokenFilter;
@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         //.requestMatchers("/h2-console/**").permitAll() // allow H2 console
                         .requestMatchers("/signin").permitAll()
+                        .requestMatchers("/refresh").permitAll() // allow refresh token requests
+                        .requestMatchers("/logout").permitAll()  // allow logout request
                         .requestMatchers("/api/public/**").permitAll()    //publically accessible API's
                         .anyRequest().authenticated()                 // secure all other endpoints
                 );
@@ -53,6 +55,8 @@ public class SecurityConfig {
                         SessionCreationPolicy.STATELESS)
         );
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler));
+        http.logout(logout -> logout.disable())          // disable default logout
+            .formLogin(form -> form.disable());          // disable form login
         //http.httpBasic(withDefaults());
 
         // Allow frames for H2 console

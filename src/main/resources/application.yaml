@@ -4,9 +4,9 @@ spring:
 
   app:
     jwtSecret: mySecretKey123912738aopsgjnspkmndfsopkvajoirjg94gf2opfng2moknm  # any key
-    jwtExpirationMs: 3000000   #3000 seconds = 50 minutes     #Development: 24 hours (86400000 ms)  # , Production: 15-30 minutes (900000-1800000 ms)
-
-# ===============================
+    jwtExpirationMs: 900000 #15 Min #60000 1 Min  #3000000   #3000 seconds = 50 minutes     #Development: 24 hours (86400000 ms)  # , Production: 15-30 minutes (900000-1800000 ms)
+    jwtRefreshExpirationMs: 604800000 # 7 days
+  # ===============================
 # H2 Database Configuration
 # ===============================
 #  datasource:
